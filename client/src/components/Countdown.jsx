@@ -41,7 +41,8 @@ const Countdown = () => {
                     <motion.div
                         key={index}
                         initial={{ scale: 0.5, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
+                        whileInView={{ scale: 1, opacity: 1 }}
+                        viewport={{ once: false }}
                         transition={{ delay: index * 0.1, type: "spring" }}
                         className="flex flex-col items-center"
                     >

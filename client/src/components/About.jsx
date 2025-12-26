@@ -11,7 +11,7 @@ const stats = [
 
 const About = () => {
     return (
-        <section id="about" className="py-24 relative z-10 overflow-hidden">
+        <section id="about" className="py-16 md:py-24 relative z-10 overflow-hidden">
             {/* Background blobs */}
             <div className="absolute top-1/2 right-0 -translate-y-1/2 w-[600px] h-[600px] bg-primary-color/10 rounded-full blur-[120px] pointer-events-none"></div>
 
@@ -22,8 +22,8 @@ const About = () => {
                     <motion.div
                         initial={{ opacity: 0, x: -50 }}
                         whileInView={{ opacity: 1, x: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 0.8 }}
+                        viewport={{ once: false, amount: 0.1 }}
+                        transition={{ duration: 0.8, type: "spring", bounce: 0.4 }}
                     >
                         <h2 className="text-4xl md:text-5xl font-black font-heading mb-8">
                             <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400">ABOUT THE</span> <br />
@@ -43,10 +43,10 @@ const About = () => {
                         {stats.map((stat, index) => (
                             <motion.div
                                 key={index}
-                                initial={{ opacity: 0, y: 20 }}
-                                whileInView={{ opacity: 1, y: 0 }}
-                                viewport={{ once: true }}
-                                transition={{ delay: index * 0.1, duration: 0.5 }}
+                                initial={{ opacity: 0, scale: 0.8, y: 50 }}
+                                whileInView={{ opacity: 1, scale: 1, y: 0 }}
+                                viewport={{ once: false, amount: 0.3 }}
+                                transition={{ delay: index * 0.1, duration: 0.5, type: "spring" }}
                                 whileHover={{ scale: 1.05, translateY: -5 }}
                                 className="glass-panel p-6 md:p-8 flex flex-col items-center justify-center text-center group border border-white/5 hover:border-white/20 transition-all duration-300"
                             >

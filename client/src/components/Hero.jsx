@@ -12,13 +12,16 @@ const Hero = () => {
 
             <div className="relative z-10 text-center px-4 w-full max-w-7xl mx-auto flex flex-col items-center">
 
-                <div className="mb-8">
+                <motion.div
+                    className="mb-8 mt-12"
+                    whileHover={{ scale: 1.05, textShadow: "0 0 8px rgb(0, 242, 255)" }}
+                >
                     <div className="text-accent-color tracking-[0.3em] text-sm md:text-lg uppercase font-bold mb-4 border border-accent-color/30 inline-block px-4 py-2 rounded-full backdrop-blur-md hover:bg-accent-color/10 transition-colors cursor-default">
                         Narsimha Reddy Engineering College
                     </div>
-                </div>
+                </motion.div>
 
-                <h1 className="text-6xl md:text-8xl lg:text-9xl font-black mb-2 leading-tight font-sans">
+                <h1 className="text-5xl sm:text-7xl md:text-8xl lg:text-9xl font-black mb-2 leading-tight font-sans">
                     <span className="text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.5)]">CODE</span>
                     <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-color to-secondary-color drop-shadow-[0_0_25px_rgba(255,65,108,0.8)]">STORM</span>
                 </h1>
@@ -36,7 +39,7 @@ const Hero = () => {
                 <div className="flex flex-wrap justify-center gap-6 md:gap-12 mb-12 w-full">
                     <motion.div whileHover={{ scale: 1.1 }} className="glass-panel px-8 py-6 text-center border-t-4 border-t-primary-color min-w-[160px] cursor-pointer hover-glow-primary">
                         <div className="text-gray-400 text-xs uppercase tracking-widest mb-1">Prize Pool</div>
-                        <div className="text-3xl font-bold text-yellow-500">₹ 10L</div>
+                        <div className="text-3xl font-bold text-yellow-500">₹ 1,00,000</div>
                     </motion.div>
 
                     <motion.div whileHover={{ scale: 1.1 }} className="glass-panel px-8 py-6 text-center border-t-4 border-t-accent-color min-w-[160px] cursor-pointer hover-glow-accent">

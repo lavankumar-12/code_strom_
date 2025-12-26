@@ -1,13 +1,13 @@
 import React, { useEffect, useRef } from 'react';
 
-const MatrixBackground = () => {
+const Background = () => {
     const canvasRef = useRef(null);
 
     useEffect(() => {
         const canvas = canvasRef.current;
         const ctx = canvas.getContext('2d');
+        let animationFrameId;
 
-        // Set canvas to full screen
         const resizeCanvas = () => {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
@@ -16,47 +16,65 @@ const MatrixBackground = () => {
         window.addEventListener('resize', resizeCanvas);
         resizeCanvas();
 
-        const letters = '0110101001010101010CODESTORM2026ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-        const fontSize = 14;
-        const columns = canvas.width / fontSize;
+        let wave = {
+            y: canvas.height / 2,
+            length: 0.01,
+            amplitude: 100,
+            frequency: 0.01
+        };
 
-        const drops = [];
-        for (let x = 0; x < columns; x++) {
-            drops[x] = 1;
-        }
+        let increment = wave.frequency;
 
-        const draw = () => {
-            ctx.fillStyle = 'rgba(15, 12, 41, 0.1)'; // Trail effect
+        const colors = [
+            { r: 255, g: 65, b: 108, a: 0.5 }, // Primary Pink
+            { r: 0, g: 242, b: 255, a: 0.5 },  // Cyan accent
+            { r: 100, g: 100, b: 255, a: 0.3 } // Deep Purple
+        ];
+
+        const animate = () => {
+            animationFrameId = requestAnimationFrame(animate);
+            // Trail effect for smooth fading
+            ctx.fillStyle = 'rgba(10, 10, 18, 0.1)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            ctx.fillStyle = '#00f2ff'; // Text color (Accent)
-            ctx.font = fontSize + 'px monospace';
+            increment += wave.frequency;
 
-            for (let i = 0; i < drops.length; i++) {
-                const text = letters.charAt(Math.floor(Math.random() * letters.length));
-                ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+            // Draw multiple waves
+            for (let i = 0; i < 3; i++) {
+                ctx.beginPath();
+                ctx.moveTo(0, canvas.height / 2);
 
-                if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
-                    drops[i] = 0;
+                for (let x = 0; x < canvas.width; x++) {
+                    // Complex sine wave equation using i to offset each wave
+                    let y = canvas.height / 2 +
+                        Math.sin(x * wave.length + increment + (i * 100)) * wave.amplitude * Math.sin(increment);
+
+                    ctx.lineTo(x, y);
                 }
-                drops[i]++;
+
+                ctx.strokeStyle = `rgba(${colors[i].r}, ${colors[i].g}, ${colors[i].b}, ${colors[i].a})`;
+                ctx.lineWidth = 2; // Thin elegant lines
+                ctx.stroke();
             }
         };
 
-        const interval = setInterval(draw, 33);
+        animate();
 
         return () => {
-            clearInterval(interval);
             window.removeEventListener('resize', resizeCanvas);
+            cancelAnimationFrame(animationFrameId);
         };
     }, []);
 
     return (
-        <canvas
-            ref={canvasRef}
-            className="fixed top-0 left-0 w-full h-full -z-10 opacity-30"
-        />
+        <div className="fixed inset-0 w-full h-full -z-50 bg-[#0a0a12] overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-b from-[#0f0c29] via-[#000000] to-[#0f0c29]"></div>
+            <canvas ref={canvasRef} className="absolute inset-0 w-full h-full filter blur-[3px] opacity-70"></canvas>
+
+            {/* Add a subtle vignette overlay for focus */}
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.8)_100%)]"></div>
+        </div>
     );
 };
 
-export default MatrixBackground;
+export default Background;

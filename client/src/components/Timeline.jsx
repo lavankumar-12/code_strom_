@@ -10,11 +10,12 @@ const events = [
 
 const Timeline = () => {
     return (
-        <section id="timeline" className="py-24 relative">
+        <section id="timeline" className="py-16 md:py-24 relative">
             <div className="max-w-5xl mx-auto px-6">
                 <motion.div
                     initial={{ opacity: 0 }}
                     whileInView={{ opacity: 1 }}
+                    viewport={{ once: false, amount: 0.2 }}
                     className="text-center mb-20"
                 >
                     <h2 className="text-4xl md:text-5xl font-black font-heading mb-4">
@@ -32,6 +33,7 @@ const Timeline = () => {
                                 key={index}
                                 initial={{ opacity: 0, x: index % 2 === 0 ? -50 : 50 }}
                                 whileInView={{ opacity: 1, x: 0 }}
+                                viewport={{ once: false, amount: 0.2 }}
                                 transition={{ duration: 0.6, delay: index * 0.1 }}
                                 className={`relative flex items-center md:justify-between ${index % 2 === 0 ? 'md:flex-row-reverse' : ''}`}
                             >
