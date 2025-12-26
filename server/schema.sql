@@ -1,0 +1,14 @@
+CREATE DATABASE IF NOT EXISTS codestorm_db;
+USE codestorm_db;
+
+CREATE TABLE IF NOT EXISTS registrations (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    team_name VARCHAR(255) NOT NULL,
+    leader_name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    phone VARCHAR(20) NOT NULL,
+    college VARCHAR(255) NOT NULL,
+    track VARCHAR(255) NOT NULL,
+    team_size INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
