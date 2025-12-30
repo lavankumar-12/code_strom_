@@ -1,114 +1,68 @@
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { useNavigate, Link } from 'react-router-dom';
-import { FaLock, FaUser, FaArrowLeft } from 'react-icons/fa';
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
-const AdminLoginPage = () => {
-    const [credentials, setCredentials] = useState({ username: '', password: '' });
-    const [error, setError] = useState('');
-    const [loading, setLoading] = useState(false);
+export default function Login() {
+    const [username, setUsername] = useState("");
+    const [password, setPassword] = useState("");
+    const [error, setError] = useState("");
     const navigate = useNavigate();
 
-    const handleChange = (e) => {
-        setCredentials({ ...credentials, [e.target.name]: e.target.value });
-    };
-
-    const handleSubmit = async (e) => {
+    const handleLogin = async (e) => {
         e.preventDefault();
-        setLoading(true);
-        setError('');
+        setError("");
 
         try {
-            const response = await fetch('/api/admin/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(credentials)
-            });
+            const response = await fetch(
+                "https://codestrom-production.up.railway.app/api/admin/login",
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ username, password }),
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error("Invalid credentials");
+            }
 
             const data = await response.json();
 
-            if (response.ok) {
-                // For simplicity, we'll use a local storage flag. In a real app, use JWT.
-                localStorage.setItem('isAdmin', 'true');
-                navigate('/dashboard');
+            if (data.success) {
+                navigate("/admin-dashboard");
             } else {
-                setError(data.message || 'Invalid credentials');
+                setError("Login failed");
             }
         } catch (err) {
-            setError('Server connection failed');
-        } finally {
-            setLoading(false);
+            console.error(err);
+            setError("Server connection failed");
         }
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center px-6">
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="glass-panel p-8 md:p-12 max-w-md w-full border-white/5 relative"
-            >
-                <Link to="/" className="absolute top-6 left-8 flex items-center gap-2 text-gray-500 hover:text-white text-[10px] font-bold uppercase tracking-widest transition-colors group">
-                    <FaArrowLeft className="group-hover:-translate-x-1 transition-transform" /> Back
-                </Link>
-                <div className="text-center mb-8">
-                    <div className="w-16 h-16 bg-primary-color/20 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-primary-color/30">
-                        <FaLock className="text-primary-color text-2xl" />
-                    </div>
-                    <h2 className="text-3xl font-black uppercase tracking-tighter">Admin <span className="text-primary-color">Portal</span></h2>
-                    <p className="text-gray-500 text-xs font-bold uppercase tracking-widest mt-2">Restricted Access Area</p>
-                </div>
+        <div className="login-container">
+            <h2>Admin Login</h2>
 
-                <form onSubmit={handleSubmit} className="space-y-6">
-                    {error && (
-                        <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-500 text-xs font-bold text-center">
-                            {error}
-                        </div>
-                    )}
+            {error && <p style={{ color: "red" }}>{error}</p>}
 
-                    <div className="space-y-2">
-                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-1">Username</label>
-                        <div className="relative">
-                            <FaUser className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-600" />
-                            <input
-                                type="text"
-                                name="username"
-                                value={credentials.username}
-                                onChange={handleChange}
-                                required
-                                placeholder="Admin ID"
-                                className="w-full bg-white/5 border border-white/10 rounded-xl py-4 pl-12 pr-4 text-white focus:outline-none focus:border-primary-color transition-all"
-                            />
-                        </div>
-                    </div>
+            <form onSubmit={handleLogin}>
+                <input
+                    type="text"
+                    placeholder="Username"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                />
 
-                    <div className="space-y-2">
-                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-1">Secret Key</label>
-                        <div className="relative">
-                            <FaLock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-600" />
-                            <input
-                                type="password"
-                                name="password"
-                                value={credentials.password}
-                                onChange={handleChange}
-                                required
-                                placeholder="••••••••"
-                                className="w-full bg-white/5 border border-white/10 rounded-xl py-4 pl-12 pr-4 text-white focus:outline-none focus:border-primary-color transition-all"
-                            />
-                        </div>
-                    </div>
+                <input
+                    type="password"
+                    placeholder="Password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                />
 
-                    <button
-                        type="submit"
-                        disabled={loading}
-                        className="btn-primary w-full py-4 font-black uppercase tracking-widest text-sm"
-                    >
-                        {loading ? 'Authenticating...' : 'Secure Login'}
-                    </button>
-                </form>
-            </motion.div>
+                <button type="submit">Login</button>
+            </form>
         </div>
     );
-};
-
-export default AdminLoginPage;
+}
