@@ -9,11 +9,16 @@ dotenv.config();
 
 const app = express();
 
-// ✅ Railway provides PORT (fallback added for safety)
+// ✅ Railway PORT (fallback for local)
 const PORT = process.env.PORT || 8080;
 
 app.use(cors());
 app.use(express.json());
+
+// ================= ROOT =================
+app.get('/', (req, res) => {
+    res.send('🚀 CodeStorm Backend is running');
+});
 
 // ================= HEALTH CHECK =================
 app.get('/health', (req, res) => {
@@ -22,7 +27,23 @@ app.get('/health', (req, res) => {
 
 // ================= REGISTER =================
 app.post('/api/register', async (req, res) => {
-    const { teamName, leaderName, email, phone, college, track, teamSize, members } = req.body;
+    const {
+        teamName,
+        leaderName,
+        email,
+        phone,
+        college,
+        track,
+        teamSize,
+        members
+    } = req.body;
+
+    // ✅ BASIC VALIDATION
+    if (!teamName || !leaderName || !email || !members || !Array.isArray(members)) {
+        return res.status(400).json({
+            message: 'Invalid request data',
+        });
+    }
 
     let connection;
     try {
@@ -30,7 +51,7 @@ app.post('/api/register', async (req, res) => {
         await connection.beginTransaction();
 
         const regSql = `
-            INSERT INTO registrations 
+            INSERT INTO registrations
             (team_name, leader_name, email, phone, college, track, team_size)
             VALUES (?, ?, ?, ?, ?, ?, ?)
         `;
@@ -39,10 +60,10 @@ app.post('/api/register', async (req, res) => {
             teamName,
             leaderName,
             email,
-            phone,
-            college,
-            track,
-            teamSize
+            phone || null,
+            college || null,
+            track || null,
+            teamSize || members.length
         ]);
 
         const registrationId = regResult.insertId;
@@ -57,23 +78,33 @@ app.post('/api/register', async (req, res) => {
             await connection.execute(memberSql, [
                 registrationId,
                 member.name,
-                member.college,
-                member.collegeCode,
-                member.gender,
-                member.branch,
-                member.isLead || false,
+                member.college || null,
+                member.collegeCode || null,
+                member.gender || null,
+                member.branch || null,
+                member.isLead ? 1 : 0,
                 member.email || null,
                 member.phone || null
             ]);
         }
 
         await connection.commit();
-        res.status(201).json({ message: 'Registration successful' });
+
+        res.status(201).json({
+            message: 'Registration successful',
+            registrationId
+        });
 
     } catch (err) {
         if (connection) await connection.rollback();
-        console.error('❌ Registration Error:', err.message);
-        res.status(500).json({ message: 'Registration failed' });
+
+        console.error('❌ REGISTRATION ERROR:', err);
+
+        // 🔥 RETURN REAL ERROR (VERY IMPORTANT)
+        res.status(500).json({
+            message: 'Registration failed',
+            error: err.message
+        });
     } finally {
         if (connection) connection.release();
     }
@@ -82,9 +113,11 @@ app.post('/api/register', async (req, res) => {
 // ================= ADMIN LOGIN =================
 app.post('/api/admin/login', (req, res) => {
     const { username, password } = req.body;
+
     if (username === 'admin' && password === 'lavan') {
         return res.json({ success: true });
     }
+
     res.status(401).json({ success: false });
 });
 
@@ -107,24 +140,25 @@ app.get('/api/admin/dashboard', async (req, res) => {
 
         res.json(data);
     } catch (err) {
-        console.error('❌ Dashboard Error:', err.message);
-        res.status(500).json({ message: 'Dashboard error' });
+        console.error('❌ DASHBOARD ERROR:', err);
+        res.status(500).json({
+            message: 'Dashboard error',
+            error: err.message
+        });
     }
 });
 
 // ================= FRONTEND (SAFE) =================
 const clientPath = path.join(__dirname, '../client/dist');
 
-// ✅ Only serve frontend if build exists
 if (fs.existsSync(clientPath)) {
     app.use(express.static(clientPath));
 
-    // ✅ EXPRESS v5 SAFE WILDCARD
-    app.get('/*', (req, res) => {
+    app.get('*', (req, res) => {
         res.sendFile(path.join(clientPath, 'index.html'));
     });
 } else {
-    console.log('⚠️ Frontend build not found, serving API only');
+    console.log('⚠️ Frontend build not found, API-only mode');
 }
 
 // ================= START SERVER =================
