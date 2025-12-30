@@ -1,19 +1,19 @@
+const API_URL = "https://codestrom-production.up.railway.app";
+
 async function loadRegistrations() {
   try {
-    const response = await fetch(
-      "https://codestrom-production.up.railway.app/api/admin/dashboard"
-    );
+    const response = await fetch(`${API_URL}/api/admin/dashboard`);
 
     if (!response.ok) {
-      throw new Error("Failed to fetch data");
+      throw new Error("Failed to load data");
     }
 
     const data = await response.json();
-    console.log(data);
+    console.log("DATA FROM SERVER:", data);
 
-    renderRegistrations(data); // your existing render function
-  } catch (error) {
-    console.error(error);
-    document.getElementById("output").innerText = "Error loading data";
+    renderRegistrations(data);
+  } catch (err) {
+    console.error(err);
+    alert("Error loading data");
   }
 }
