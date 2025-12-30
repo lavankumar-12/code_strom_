@@ -148,10 +148,11 @@ app.get('/api/admin/dashboard', async (req, res) => {
 const clientPath = path.join(__dirname, '../client/dist');
 app.use(express.static(clientPath));
 
-// React Router fallback
-app.get('*', (req, res) => {
-    res.sendFile(path.join(clientPath, 'index.html'));
+// Wildcard Route for React Router (Express v5 safe)
+app.get('/*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../client/dist/index.html'));
 });
+
 
 /* =========================
    START SERVER
