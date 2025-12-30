@@ -4,7 +4,7 @@ import { FaClock, FaTrophy, FaLayerGroup, FaUsers } from 'react-icons/fa';
 
 const stats = [
     { icon: FaClock, label: 'Non-Stop Action', value: '36 Hours', color: 'text-accent-color' },
-    { icon: FaTrophy, label: 'Prize Pool', value: '₹ 10L+', color: 'text-yellow-400' },
+    { icon: FaTrophy, label: 'Prize Pool', value: '₹ 1,00,000', color: 'text-yellow-400' },
     { icon: FaLayerGroup, label: 'Themes', value: '10+', color: 'text-primary-color' },
     { icon: FaUsers, label: 'Participants', value: '500+', color: 'text-secondary-color' },
 ];

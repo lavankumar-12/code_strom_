@@ -18,26 +18,78 @@ app.get('/', (req, res) => {
 
 // Registration Endpoint
 app.post('/api/register', async (req, res) => {
-    const { teamName, leaderName, email, phone, college, track, teamSize } = req.body;
+    console.log('Received registration request:', req.body);
+    const { teamName, leaderName, email, phone, college, track, teamSize, members } = req.body;
 
+    const connection = await db.getConnection();
     try {
-        const sql = `INSERT INTO registrations (team_name, leader_name, email, phone, college, track, team_size) VALUES (?, ?, ?, ?, ?, ?, ?)`;
-        const [result] = await db.execute(sql, [teamName, leaderName, email, phone, college, track, teamSize]);
+        await connection.beginTransaction();
 
-        res.status(201).json({ message: 'Registration successful!', id: result.insertId });
+        // 1. Insert into registrations table
+        const regSql = `INSERT INTO registrations (team_name, leader_name, email, phone, college, track, team_size) VALUES (?, ?, ?, ?, ?, ?, ?)`;
+        const [regResult] = await connection.execute(regSql, [teamName, leaderName, email, phone, college, track, teamSize]);
+        const registrationId = regResult.insertId;
+
+        // 2. Insert each member into team_members table
+        const memberSql = `INSERT INTO team_members (registration_id, name, college, college_code, gender, branch, is_lead, email, phone) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+
+        for (const member of members) {
+            await connection.execute(memberSql, [
+                registrationId,
+                member.name,
+                member.college,
+                member.collegeCode,
+                member.gender,
+                member.branch,
+                member.isLead || false,
+                member.email || null,
+                member.phone || null
+            ]);
+        }
+
+        await connection.commit();
+        res.status(201).json({ message: 'Registration successful!', id: registrationId });
     } catch (error) {
-        console.error(error);
+        await connection.rollback();
+        console.error('Registration Error:', error);
         res.status(500).json({ message: 'Registration failed', error: error.message });
+    } finally {
+        connection.release();
     }
 });
 
-// Get all registrations (Admin)
-app.get('/api/registrations', async (req, res) => {
+// Admin Login
+app.post('/api/admin/login', (req, res) => {
+    const { username, password } = req.body;
+    // Hardcoded credentials as requested
+    if (username === 'admin' && password === 'lavan') {
+        res.json({ message: 'Login successful', isAdmin: true });
+    } else {
+        res.status(401).json({ message: 'Invalid credentials' });
+    }
+});
+
+// Get all registrations with members (Admin)
+app.get('/api/admin/dashboard', async (req, res) => {
     try {
-        const [rows] = await db.query('SELECT * FROM registrations');
-        res.json(rows);
+        const [registrations] = await db.query('SELECT * FROM registrations ORDER BY created_at DESC');
+
+        // Fetch members for each registration
+        const registrationsWithMembers = await Promise.all(registrations.map(async (reg) => {
+            const [members] = await db.query('SELECT * FROM team_members WHERE registration_id = ?', [reg.id]);
+            return { ...reg, members };
+        }));
+
+        // Fetch member counts by college
+        const [collegeStats] = await db.query('SELECT college, COUNT(*) as count FROM team_members GROUP BY college ORDER BY count DESC');
+
+        res.json({
+            registrations: registrationsWithMembers,
+            collegeStats
+        });
     } catch (error) {
-        res.status(500).json({ message: 'Error fetching data' });
+        console.error('Dashboard Error:', error);
+        res.status(500).json({ message: 'Error fetching dashboard data' });
     }
 });
 

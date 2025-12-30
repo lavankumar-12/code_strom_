@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
 import { FaRocket, FaCalendarAlt, FaClock } from 'react-icons/fa';
 
 const Hero = () => {
@@ -54,17 +55,18 @@ const Hero = () => {
                 </div>
 
                 <div>
-                    <motion.a
-                        href="https://forms.gle/rXXfSuyR2YDoKw696"
-                        target="_blank"
-                        rel="noopener noreferrer"
+                    <motion.div
                         whileTap={{ scale: 0.95 }}
-                        className="relative inline-flex items-center justify-center px-10 py-4 font-bold text-white transition-all duration-200 bg-primary-color font-sans uppercase tracking-wider rounded-full hover:bg-secondary-color hover:scale-105 shadow-[0_0_20px_rgba(255,65,108,0.5)] hover:shadow-[0_0_40px_rgba(255,65,108,0.8)] ripple-effect overflow-hidden"
                     >
-                        <FaRocket className="mr-3" />
-                        Register Your Team
-                        {/* Ripple Effect Container handled by CSS or generic interaction */}
-                    </motion.a>
+                        <Link
+                            to="/register"
+                            className="relative inline-flex items-center justify-center px-10 py-4 font-bold text-white transition-all duration-200 bg-primary-color font-sans uppercase tracking-wider rounded-full hover:bg-secondary-color hover:scale-105 shadow-[0_0_20px_rgba(255,65,108,0.5)] hover:shadow-[0_0_40px_rgba(255,65,108,0.8)] ripple-effect overflow-hidden"
+                        >
+                            <FaRocket className="mr-3" />
+                            Register Your Team
+                            {/* Ripple Effect Container handled by CSS or generic interaction */}
+                        </Link>
+                    </motion.div>
                 </div>
 
             </div>

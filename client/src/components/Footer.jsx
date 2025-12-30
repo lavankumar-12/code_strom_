@@ -1,5 +1,6 @@
 import React from 'react';
-import { FaMapMarkerAlt, FaGlobe, FaInstagram, FaLinkedin, FaTwitter, FaEnvelope } from 'react-icons/fa';
+import { FaMapMarkerAlt, FaGlobe, FaInstagram, FaLinkedin, FaTwitter, FaEnvelope, FaLock } from 'react-icons/fa';
+import { Link } from 'react-router-dom';
 
 const Footer = () => {
     return (
@@ -74,9 +75,14 @@ const Footer = () => {
                     </div>
                 </div>
 
-                <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center text-gray-600 text-xs uppercase tracking-widest">
+                <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center text-gray-600 text-[10px] uppercase tracking-widest">
                     <p>&copy; 2026 CodeStorm. All rights reserved.</p>
-                    <p className="mt-2 md:mt-0">Design by CodeStorm Team</p>
+                    <div className="flex items-center gap-6 mt-4 md:mt-0">
+                        <Link to="/login" className="flex items-center gap-1.5 hover:text-primary-color transition-colors">
+                            <FaLock size={10} /> Admin Login
+                        </Link>
+                        <p>Design by Lavan Kumar</p>
+                    </div>
                 </div>
             </div>
         </footer>

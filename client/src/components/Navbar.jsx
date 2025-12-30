@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
 import { FaBars, FaTimes } from 'react-icons/fa';
 
 const Navbar = () => {
@@ -33,7 +34,7 @@ const Navbar = () => {
                     {navItems.map((item) => (
                         <motion.a
                             key={item.title}
-                            href={`#${item.id}`}
+                            href={`/${item.id === 'home' ? '' : '#' + item.id}`}
                             whileHover={{ scale: 1.1, textShadow: "0 0 8px rgb(255, 255, 255)" }}
                             whileTap={{ scale: 0.95 }}
                             className="text-gray-300 hover:text-accent-color transition-colors cursor-pointer text-sm font-medium uppercase tracking-wide"
@@ -41,16 +42,17 @@ const Navbar = () => {
                             {item.title}
                         </motion.a>
                     ))}
-                    <motion.a
-                        href="https://forms.gle/rXXfSuyR2YDoKw696"
-                        target="_blank"
-                        rel="noopener noreferrer"
+                    <motion.div
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
-                        className="btn-primary text-sm px-6 py-2 ripple-effect"
                     >
-                        Register Now
-                    </motion.a>
+                        <Link
+                            to="/register"
+                            className="btn-primary text-sm px-6 py-2 ripple-effect"
+                        >
+                            Register Now
+                        </Link>
+                    </motion.div>
                 </div>
 
                 {/* Mobile Menu Button */}
@@ -69,7 +71,7 @@ const Navbar = () => {
                     {navItems.map((item) => (
                         <motion.a
                             key={item.title}
-                            href={`#${item.id}`}
+                            href={`/${item.id === 'home' ? '' : '#' + item.id}`}
                             whileTap={{ scale: 0.9 }}
                             className="text-white text-lg font-medium hover:text-accent-color"
                             onClick={() => setIsOpen(false)}
@@ -77,16 +79,18 @@ const Navbar = () => {
                             {item.title}
                         </motion.a>
                     ))}
-                    <motion.a
-                        href="https://forms.gle/rXXfSuyR2YDoKw696"
-                        target="_blank"
-                        rel="noopener noreferrer"
+                    <motion.div
+                        className="w-full max-w-xs"
                         whileTap={{ scale: 0.95 }}
-                        className="btn-primary w-full max-w-xs text-center py-3 ripple-effect"
-                        onClick={() => setIsOpen(false)}
                     >
-                        Register Now
-                    </motion.a>
+                        <Link
+                            to="/register"
+                            className="btn-primary block w-full text-center py-3 ripple-effect"
+                            onClick={() => setIsOpen(false)}
+                        >
+                            Register Now
+                        </Link>
+                    </motion.div>
                 </motion.div>
             )}
         </motion.nav>
