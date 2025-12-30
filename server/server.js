@@ -2,19 +2,20 @@ const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const path = require('path');
+const fs = require('fs');
 const db = require('./db');
 
 dotenv.config();
 
 const app = express();
 
-// 🚨 IMPORTANT: Railway provides PORT
-const PORT = process.env.PORT;
+// ✅ Railway provides PORT (fallback added for safety)
+const PORT = process.env.PORT || 8080;
 
 app.use(cors());
 app.use(express.json());
 
-// ✅ Health check (VERY IMPORTANT FOR RAILWAY)
+// ================= HEALTH CHECK =================
 app.get('/health', (req, res) => {
     res.status(200).send('OK');
 });
@@ -35,7 +36,13 @@ app.post('/api/register', async (req, res) => {
         `;
 
         const [regResult] = await connection.execute(regSql, [
-            teamName, leaderName, email, phone, college, track, teamSize
+            teamName,
+            leaderName,
+            email,
+            phone,
+            college,
+            track,
+            teamSize
         ]);
 
         const registrationId = regResult.insertId;
@@ -65,7 +72,7 @@ app.post('/api/register', async (req, res) => {
 
     } catch (err) {
         if (connection) await connection.rollback();
-        console.error(err);
+        console.error('❌ Registration Error:', err.message);
         res.status(500).json({ message: 'Registration failed' });
     } finally {
         if (connection) connection.release();
@@ -100,21 +107,25 @@ app.get('/api/admin/dashboard', async (req, res) => {
 
         res.json(data);
     } catch (err) {
-        console.error(err);
+        console.error('❌ Dashboard Error:', err.message);
         res.status(500).json({ message: 'Dashboard error' });
     }
 });
 
-// ================= FRONTEND =================
-// ⚠️ Only enable if frontend build exists
+// ================= FRONTEND (SAFE) =================
 const clientPath = path.join(__dirname, '../client/dist');
 
-app.use(express.static(clientPath));
+// ✅ Only serve frontend if build exists
+if (fs.existsSync(clientPath)) {
+    app.use(express.static(clientPath));
 
-// 🚨 EXPRESS v5 SAFE WILDCARD
-app.get('/*', (req, res) => {
-    res.sendFile(path.join(clientPath, 'index.html'));
-});
+    // ✅ EXPRESS v5 SAFE WILDCARD
+    app.get('/*', (req, res) => {
+        res.sendFile(path.join(clientPath, 'index.html'));
+    });
+} else {
+    console.log('⚠️ Frontend build not found, serving API only');
+}
 
 // ================= START SERVER =================
 app.listen(PORT, () => {
