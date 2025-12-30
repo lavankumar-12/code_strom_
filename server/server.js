@@ -1,32 +1,36 @@
-const express = require('express');
-const cors = require('cors');
-const dotenv = require('dotenv');
-const path = require('path');
-const fs = require('fs');
-const db = require('./db');
+const express = require("express");
+const cors = require("cors");
+const dotenv = require("dotenv");
+const db = require("./db");
 
 dotenv.config();
 
 const app = express();
 
-// ✅ Railway PORT (fallback for local)
+// ================= PORT =================
 const PORT = process.env.PORT || 8080;
 
-app.use(cors());
+// ================= MIDDLEWARE =================
+app.use(cors({
+    origin: "*", // ✅ allow Vercel frontend
+    methods: ["GET", "POST"],
+    allowedHeaders: ["Content-Type"]
+}));
+
 app.use(express.json());
 
 // ================= ROOT =================
-app.get('/', (req, res) => {
-    res.send('🚀 CodeStorm Backend is running');
+app.get("/", (req, res) => {
+    res.send("🚀 CodeStorm Backend is running");
 });
 
 // ================= HEALTH CHECK =================
-app.get('/health', (req, res) => {
-    res.status(200).send('OK');
+app.get("/health", (req, res) => {
+    res.status(200).send("OK");
 });
 
 // ================= REGISTER =================
-app.post('/api/register', async (req, res) => {
+app.post("/api/register", async (req, res) => {
     const {
         teamName,
         leaderName,
@@ -38,14 +42,15 @@ app.post('/api/register', async (req, res) => {
         members
     } = req.body;
 
-    // ✅ BASIC VALIDATION
-    if (!teamName || !leaderName || !email || !members || !Array.isArray(members)) {
+    // BASIC VALIDATION
+    if (!teamName || !leaderName || !email || !Array.isArray(members)) {
         return res.status(400).json({
-            message: 'Invalid request data',
+            message: "Invalid request data"
         });
     }
 
     let connection;
+
     try {
         connection = await db.getConnection();
         await connection.beginTransaction();
@@ -91,18 +96,17 @@ app.post('/api/register', async (req, res) => {
         await connection.commit();
 
         res.status(201).json({
-            message: 'Registration successful',
+            message: "Registration successful",
             registrationId
         });
 
     } catch (err) {
         if (connection) await connection.rollback();
 
-        console.error('❌ REGISTRATION ERROR:', err);
+        console.error("❌ REGISTRATION ERROR:", err);
 
-        // 🔥 RETURN REAL ERROR (VERY IMPORTANT)
         res.status(500).json({
-            message: 'Registration failed',
+            message: "Registration failed",
             error: err.message
         });
     } finally {
@@ -111,27 +115,30 @@ app.post('/api/register', async (req, res) => {
 });
 
 // ================= ADMIN LOGIN =================
-app.post('/api/admin/login', (req, res) => {
+app.post("/api/admin/login", (req, res) => {
     const { username, password } = req.body;
 
-    if (username === 'admin' && password === 'lavan') {
+    if (username === "admin" && password === "lavan") {
         return res.json({ success: true });
     }
 
-    res.status(401).json({ success: false });
+    res.status(401).json({
+        success: false,
+        message: "Invalid credentials"
+    });
 });
 
 // ================= ADMIN DASHBOARD =================
-app.get('/api/admin/dashboard', async (req, res) => {
+app.get("/api/admin/dashboard", async (req, res) => {
     try {
         const [registrations] = await db.query(
-            'SELECT * FROM registrations ORDER BY created_at DESC'
+            "SELECT * FROM registrations ORDER BY created_at DESC"
         );
 
         const data = await Promise.all(
             registrations.map(async (reg) => {
                 const [members] = await db.query(
-                    'SELECT * FROM team_members WHERE registration_id = ?',
+                    "SELECT * FROM team_members WHERE registration_id = ?",
                     [reg.id]
                 );
                 return { ...reg, members };
@@ -140,26 +147,13 @@ app.get('/api/admin/dashboard', async (req, res) => {
 
         res.json(data);
     } catch (err) {
-        console.error('❌ DASHBOARD ERROR:', err);
+        console.error("❌ DASHBOARD ERROR:", err);
         res.status(500).json({
-            message: 'Dashboard error',
+            message: "Dashboard error",
             error: err.message
         });
     }
 });
-
-// ================= FRONTEND (SAFE) =================
-const clientPath = path.join(__dirname, '../client/dist');
-
-if (fs.existsSync(clientPath)) {
-    app.use(express.static(clientPath));
-
-    app.get('*', (req, res) => {
-        res.sendFile(path.join(clientPath, 'index.html'));
-    });
-} else {
-    console.log('⚠️ Frontend build not found, API-only mode');
-}
 
 // ================= START SERVER =================
 app.listen(PORT, () => {
