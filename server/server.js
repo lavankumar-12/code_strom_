@@ -1,31 +1,64 @@
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
-const db = require('./db');
 const path = require('path');
+const db = require('./db');
 
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+
+// 🚀 IMPORTANT: Railway uses dynamic PORT
+const PORT = process.env.PORT || 8080;
 
 app.use(cors());
 app.use(express.json());
 
-// Registration Endpoint
+/* =========================
+   REGISTRATION API
+========================= */
 app.post('/api/register', async (req, res) => {
     console.log('Received registration request:', req.body);
-    const { teamName, leaderName, email, phone, college, track, teamSize, members } = req.body;
 
-    const connection = await db.getConnection();
+    const {
+        teamName,
+        leaderName,
+        email,
+        phone,
+        college,
+        track,
+        teamSize,
+        members
+    } = req.body;
+
+    let connection;
     try {
+        connection = await db.getConnection();
         await connection.beginTransaction();
 
-        const regSql = `INSERT INTO registrations (team_name, leader_name, email, phone, college, track, team_size) VALUES (?, ?, ?, ?, ?, ?, ?)`;
-        const [regResult] = await connection.execute(regSql, [teamName, leaderName, email, phone, college, track, teamSize]);
+        const regSql = `
+      INSERT INTO registrations 
+      (team_name, leader_name, email, phone, college, track, team_size)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `;
+
+        const [regResult] = await connection.execute(regSql, [
+            teamName,
+            leaderName,
+            email,
+            phone,
+            college,
+            track,
+            teamSize
+        ]);
+
         const registrationId = regResult.insertId;
 
-        const memberSql = `INSERT INTO team_members (registration_id, name, college, college_code, gender, branch, is_lead, email, phone) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+        const memberSql = `
+      INSERT INTO team_members
+      (registration_id, name, college, college_code, gender, branch, is_lead, email, phone)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `;
 
         for (const member of members) {
             await connection.execute(memberSql, [
@@ -42,19 +75,30 @@ app.post('/api/register', async (req, res) => {
         }
 
         await connection.commit();
-        res.status(201).json({ message: 'Registration successful!', id: registrationId });
+
+        res.status(201).json({
+            message: 'Registration successful!',
+            id: registrationId
+        });
     } catch (error) {
-        await connection.rollback();
+        if (connection) await connection.rollback();
         console.error('Registration Error:', error);
-        res.status(500).json({ message: 'Registration failed', error: error.message });
+
+        res.status(500).json({
+            message: 'Registration failed',
+            error: error.message
+        });
     } finally {
-        connection.release();
+        if (connection) connection.release();
     }
 });
 
-// Admin Login
+/* =========================
+   ADMIN LOGIN
+========================= */
 app.post('/api/admin/login', (req, res) => {
     const { username, password } = req.body;
+
     if (username === 'admin' && password === 'lavan') {
         res.json({ message: 'Login successful', isAdmin: true });
     } else {
@@ -62,30 +106,56 @@ app.post('/api/admin/login', (req, res) => {
     }
 });
 
-// Admin Dashboard Data
+/* =========================
+   ADMIN DASHBOARD
+========================= */
 app.get('/api/admin/dashboard', async (req, res) => {
     try {
-        const [registrations] = await db.query('SELECT * FROM registrations ORDER BY created_at DESC');
-        const registrationsWithMembers = await Promise.all(registrations.map(async (reg) => {
-            const [members] = await db.query('SELECT * FROM team_members WHERE registration_id = ?', [reg.id]);
-            return { ...reg, members };
-        }));
-        const [collegeStats] = await db.query('SELECT college, COUNT(*) as count FROM team_members GROUP BY college ORDER BY count DESC');
-        res.json({ registrations: registrationsWithMembers, collegeStats });
+        const [registrations] = await db.query(
+            'SELECT * FROM registrations ORDER BY created_at DESC'
+        );
+
+        const registrationsWithMembers = await Promise.all(
+            registrations.map(async (reg) => {
+                const [members] = await db.query(
+                    'SELECT * FROM team_members WHERE registration_id = ?',
+                    [reg.id]
+                );
+                return { ...reg, members };
+            })
+        );
+
+        const [collegeStats] = await db.query(
+            `SELECT college, COUNT(*) AS count 
+       FROM team_members 
+       GROUP BY college 
+       ORDER BY count DESC`
+        );
+
+        res.json({
+            registrations: registrationsWithMembers,
+            collegeStats
+        });
     } catch (error) {
         console.error('Dashboard Error:', error);
         res.status(500).json({ message: 'Error fetching dashboard data' });
     }
 });
 
-// Serving the Frontend Production Build
-app.use(express.static(path.join(__dirname, '../client/dist')));
+/* =========================
+   SERVE FRONTEND (PRODUCTION)
+========================= */
+const clientPath = path.join(__dirname, '../client/dist');
+app.use(express.static(clientPath));
 
-// Wildcard Route for React Router
+// React Router fallback
 app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../client/dist/index.html'));
+    res.sendFile(path.join(clientPath, 'index.html'));
 });
 
+/* =========================
+   START SERVER
+========================= */
 app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+    console.log(`✅ Server running on port ${PORT}`);
 });
