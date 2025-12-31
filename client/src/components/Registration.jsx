@@ -22,18 +22,19 @@ const Registration = () => {
     const [status, setStatus] = useState('');
     const [errorMsg, setErrorMsg] = useState('');
 
-    const API_BASE = "https://codestrom-production.up.railway.app";
+    //const API_BASE = "https://codestrom-production.up.railway.app";
 
 const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Validate first 4 members
     const mandatoryMembers = formData.members.slice(0, 4);
     const allFilled = mandatoryMembers.every(m =>
-        m.name.trim() !== '' &&
-        m.college.trim() !== '' &&
-        m.collegeCode.trim() !== '' &&
-        m.gender.trim() !== '' &&
-        m.branch.trim() !== ''
+        m.name.trim() &&
+        m.college.trim() &&
+        m.collegeCode.trim() &&
+        m.gender.trim() &&
+        m.branch.trim()
     );
 
     if (!allFilled) {
@@ -47,8 +48,8 @@ const handleSubmit = async (e) => {
         return;
     }
 
-    setStatus('submitting');
-    setErrorMsg('');
+    setStatus("submitting");
+    setErrorMsg("");
 
     try {
         const payload = {
@@ -58,33 +59,35 @@ const handleSubmit = async (e) => {
             email: lead.email,
             phone: lead.phone,
             college: lead.college,
-            teamSize: formData.members.filter(m => m.name.trim() !== '').length,
-            members: formData.members.filter(m => m.name.trim() !== '')
+            teamSize: formData.members.filter(m => m.name.trim()).length,
+            members: formData.members.filter(m => m.name.trim())
         };
 
-        const response = await fetch(`${API_BASE}/api/register`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(payload)
-        });
+        const response = await fetch(
+            "https://codestrom-production.up.railway.app/api/register",
+            {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            }
+        );
 
         const data = await response.json();
 
-        if (!response.ok) {
-            throw new Error(data.message || "Registration failed");
+        if (response.ok) {
+            setStatus("success");
+            alert("Registration successful!");
+        } else {
+            setStatus("error");
+            setErrorMsg(data.message || "Registration failed");
         }
 
-        setStatus('success');
-        alert("Registration successful!");
-
-    } catch (error) {
-        console.error(error);
-        setStatus('error');
-        setErrorMsg("Network error. Please try again.");
+    } catch (err) {
+        setStatus("error");
+        setErrorMsg("Network error. Server not reachable.");
     }
 };
+
 
 
     if (status === 'success') {
