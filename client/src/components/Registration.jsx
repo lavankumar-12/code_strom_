@@ -22,7 +22,7 @@ const Registration = () => {
     const [status, setStatus] = useState('');
     const [errorMsg, setErrorMsg] = useState('');
 
-    //const API_BASE = "https://codestrom-production.up.railway.app";
+    const API_BASE = "https://codestrom-production.up.railway.app";
 
 const handleSubmit = async (e) => {
     e.preventDefault();
