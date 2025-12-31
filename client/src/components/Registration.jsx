@@ -22,81 +22,70 @@ const Registration = () => {
     const [status, setStatus] = useState('');
     const [errorMsg, setErrorMsg] = useState('');
 
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
-    };
+    const API_BASE = "https://codestrom-production.up.railway.app";
 
-    const handleMemberChange = (index, field, value) => {
-        const updatedMembers = [...formData.members];
-        updatedMembers[index][field] = value;
-        setFormData(prev => ({ ...prev, members: updatedMembers }));
-    };
+const handleSubmit = async (e) => {
+    e.preventDefault();
 
-    const setLead = (index) => {
-        const updatedMembers = formData.members.map((m, i) => ({
-            ...m,
-            isLead: i === index,
-        }));
-        setFormData(prev => ({ ...prev, members: updatedMembers }));
-    };
+    const mandatoryMembers = formData.members.slice(0, 4);
+    const allFilled = mandatoryMembers.every(m =>
+        m.name.trim() !== '' &&
+        m.college.trim() !== '' &&
+        m.collegeCode.trim() !== '' &&
+        m.gender.trim() !== '' &&
+        m.branch.trim() !== ''
+    );
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
+    if (!allFilled) {
+        alert("Details for the first 4 members are mandatory!");
+        return;
+    }
 
-        // Validation: First 4 members details must be present
-        const mandatoryMembers = formData.members.slice(0, 4);
-        const allFilled = mandatoryMembers.every(m =>
-            m.name.trim() !== '' &&
-            m.college.trim() !== '' &&
-            m.collegeCode.trim() !== '' &&
-            m.gender.trim() !== '' &&
-            m.branch.trim() !== ''
-        );
+    const lead = formData.members.find(m => m.isLead);
+    if (!lead.email || !lead.phone) {
+        alert("Team Lead must provide Email and Mobile number!");
+        return;
+    }
 
-        if (!allFilled) {
-            alert("Details for the first 4 members are mandatory (Name, College, Code, Gender, Branch)!");
-            return;
+    setStatus('submitting');
+    setErrorMsg('');
+
+    try {
+        const payload = {
+            teamName: formData.teamName,
+            track: formData.track,
+            leaderName: lead.name,
+            email: lead.email,
+            phone: lead.phone,
+            college: lead.college,
+            teamSize: formData.members.filter(m => m.name.trim() !== '').length,
+            members: formData.members.filter(m => m.name.trim() !== '')
+        };
+
+        const response = await fetch(`${API_BASE}/api/register`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.message || "Registration failed");
         }
 
-        const lead = formData.members.find(m => m.isLead);
-        if (!lead.email || !lead.phone) {
-            alert("Team Lead must provide Email and Mobile number!");
-            return;
-        }
+        setStatus('success');
+        alert("Registration successful!");
 
-        setStatus('submitting');
-        setErrorMsg('');
-        try {
-            const payload = {
-                teamName: formData.teamName,
-                track: formData.track,
-                leaderName: lead.name,
-                email: lead.email,
-                phone: lead.phone,
-                college: lead.college, // Satisfy existing schema
-                teamSize: formData.members.filter(m => m.name.trim() !== '').length,
-                members: formData.members.filter(m => m.name.trim() !== '')
-            };
+    } catch (error) {
+        console.error(error);
+        setStatus('error');
+        setErrorMsg("Network error. Please try again.");
+    }
+};
 
-            const response = await fetch('/api/register', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-
-            if (response.ok) {
-                setStatus('success');
-            } else {
-                const data = await response.json();
-                setStatus('error');
-                setErrorMsg(data.message || 'Registration failed. Please try again.');
-            }
-        } catch (err) {
-            setStatus('error');
-            setErrorMsg('Network error. Is the server running?');
-        }
-    };
 
     if (status === 'success') {
         return (
