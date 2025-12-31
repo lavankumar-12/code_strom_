@@ -25,68 +25,63 @@ const Registration = () => {
     const API_BASE = "https://codestrom-production.up.railway.app";
 
 const handleSubmit = async (e) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    // Validate first 4 members
-    const mandatoryMembers = formData.members.slice(0, 4);
-    const allFilled = mandatoryMembers.every(m =>
-        m.name.trim() &&
-        m.college.trim() &&
-        m.collegeCode.trim() &&
-        m.gender.trim() &&
-        m.branch.trim()
+  const mandatoryMembers = formData.members.slice(0, 4);
+  const allFilled = mandatoryMembers.every(m =>
+    m.name && m.college && m.collegeCode && m.gender && m.branch
+  );
+
+  if (!allFilled) {
+    alert("First 4 members are mandatory");
+    return;
+  }
+
+  const lead = formData.members.find(m => m.isLead);
+  if (!lead.email || !lead.phone) {
+    alert("Leader email & phone required");
+    return;
+  }
+
+  setStatus("submitting");
+  setErrorMsg("");
+
+  const payload = {
+    teamName: formData.teamName,
+    track: formData.track,
+    leaderName: lead.name,
+    email: lead.email,
+    phone: lead.phone,
+    college: lead.college,
+    teamSize: formData.members.filter(m => m.name).length,
+    members: formData.members.filter(m => m.name)
+  };
+
+  try {
+    const response = await fetch(
+      "https://codestrom-production.up.railway.app/api/register",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      }
     );
 
-    if (!allFilled) {
-        alert("Details for the first 4 members are mandatory!");
-        return;
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || "Registration failed");
     }
 
-    const lead = formData.members.find(m => m.isLead);
-    if (!lead.email || !lead.phone) {
-        alert("Team Lead must provide Email and Mobile number!");
-        return;
-    }
-
-    setStatus("submitting");
-    setErrorMsg("");
-
-    try {
-        const payload = {
-            teamName: formData.teamName,
-            track: formData.track,
-            leaderName: lead.name,
-            email: lead.email,
-            phone: lead.phone,
-            college: lead.college,
-            teamSize: formData.members.filter(m => m.name.trim()).length,
-            members: formData.members.filter(m => m.name.trim())
-        };
-
-        const response = await fetch(
-            "https://codestrom-production.up.railway.app/api/register",
-            {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload)
-            }
-        );
-
-        const data = await response.json();
-
-        if (response.ok) {
-            setStatus("success");
-            alert("Registration successful!");
-        } else {
-            setStatus("error");
-            setErrorMsg(data.message || "Registration failed");
-        }
-
-    } catch (err) {
-        setStatus("error");
-        setErrorMsg("Network error. Server not reachable.");
-    }
+    setStatus("success");
+    alert("Registration successful!");
+  } catch (err) {
+    console.error(err);
+    setStatus("error");
+    setErrorMsg(err.message);
+  }
 };
+
 
 
 
